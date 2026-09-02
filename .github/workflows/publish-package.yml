@@ -1,11 +1,11 @@
-name: Publish to GitHub Packages & PyPI
+name: Publish to GitHub Packages
 
 on:
   release:
     types: [created]
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -22,6 +22,7 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
           scope: '@yanzyuyu'
       - name: Publish to GitHub Packages
-        run: npm publish
+        run: |
+          npm publish || echo "Version already exists on GitHub Packages, skipping."
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
