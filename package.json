@@ -1,0 +1,30 @@
+{
+  "name": "@yanzyuyu/yncli",
+  "version": "1.2.3",
+  "description": "Autonomous Polyglot AI Coding Agent & TUI with Ultrabrain Planning",
+  "bin": {
+    "yncli": "bin/yncli.js"
+  },
+  "files": [
+    "bin",
+    "README.md"
+  ],
+  "keywords": [
+    "ai",
+    "coding-agent",
+    "cli",
+    "tui",
+    "antigravity",
+    "polyglot",
+    "developer-tools",
+    "agentic-ai"
+  ],
+  "author": "yanzyuyu",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
