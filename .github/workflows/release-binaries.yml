@@ -1,0 +1,80 @@
+name: Create GitHub Release Binaries
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: yncli-linux
+            asset_name: yncli-linux-x64
+          - os: windows-latest
+            artifact_name: yncli-windows
+            asset_name: yncli-windows-x64.exe
+          - os: macos-latest
+            artifact_name: yncli-macos
+            asset_name: yncli-macos-x64
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PyInstaller & Dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller build
+          pip install .
+
+      - name: Build Standalone Executable Binary
+        run: |
+          pyinstaller --onefile --name yncli --clean yncli/main.py
+
+      - name: Rename and Prepare Binary
+        shell: bash
+        run: |
+          mkdir -p release-dist
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cp dist/yncli.exe release-dist/${{ matrix.asset_name }}
+          else
+            cp dist/yncli release-dist/${{ matrix.asset_name }}
+            chmod +x release-dist/${{ matrix.asset_name }}
+          fi
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: release-dist/*
+
+  create-github-release:
+    needs: build-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all built binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: all-binaries
+
+      - name: Generate Release & Attach Binaries
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            all-binaries/yncli-linux/*
+            all-binaries/yncli-windows/*
+            all-binaries/yncli-macos/*
+          generate_release_notes: true
