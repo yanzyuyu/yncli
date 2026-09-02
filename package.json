@@ -21,6 +21,10 @@
   ],
   "author": "yanzyuyu",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yanzyuyu/yncli.git"
+  },
   "publishConfig": {
     "access": "public"
   },
