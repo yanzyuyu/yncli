@@ -5,6 +5,7 @@ from yncli.tools.system_tools import run_terminal_command, git_status, git_diff,
 from yncli.tools.file_tools import read_file, write_file, edit_file_replace, list_directory, find_files, grep_search
 from yncli.tools.search_tools import web_search, fetch_webpage
 from yncli.tools.polyglot_tools import validate_code_syntax, run_project_tests
+from yncli.mcp_client import start_mcp_server, list_mcp_resources, call_mcp_tool
 
 AGENT_TOOLS: List[Dict[str, Any]] = [
     {
@@ -210,6 +211,62 @@ AGENT_TOOLS: List[Dict[str, Any]] = [
                 "properties": {}
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "delegate_to_subagent",
+            "description": "Delegates a specific sub-task to an autonomous child agent.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "task_description": {"type": "string", "description": "Clear description of the task for the subagent."},
+                    "role": {"type": "string", "description": "The role for the subagent (e.g. 'Frontend Developer')."}
+                },
+                "required": ["task_description", "role"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "start_mcp_server",
+            "description": "Starts an MCP server over stdio.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "command": {"type": "string", "description": "The command to run (e.g. 'node', 'python')."},
+                    "args": {"type": "array", "items": {"type": "string"}, "description": "Arguments to pass to the command."}
+                },
+                "required": ["command", "args"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_mcp_resources",
+            "description": "Lists tools available from the running MCP server.",
+            "parameters": {
+                "type": "object",
+                "properties": {}
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "call_mcp_tool",
+            "description": "Calls a tool on the running MCP server.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "Name of the MCP tool."},
+                    "arguments": {"type": "object", "description": "Arguments for the MCP tool."}
+                },
+                "required": ["name", "arguments"]
+            }
+        }
     }
 ]
 
@@ -260,6 +317,15 @@ def execute_tool(name: str, arguments: Dict[str, Any], current_cwd: str = ".") -
             return run_project_tests(test_filter=arguments.get("test_filter", ""), cwd=current_cwd)
         elif name == "git_status":
             return git_status(cwd=current_cwd)
+        elif name == "start_mcp_server":
+            return start_mcp_server(command=arguments.get("command", ""), args=arguments.get("args", []))
+        elif name == "list_mcp_resources":
+            return list_mcp_resources()
+        elif name == "call_mcp_tool":
+            return call_mcp_tool(name=arguments.get("name", ""), arguments=arguments.get("arguments", {}))
+        elif name == "delegate_to_subagent":
+            # Handled in yncli/agent.py directly to allow Agent instantiation
+            return "[ERROR] delegate_to_subagent must be handled by the Agent directly."
         else:
             return f"[ERROR] Unknown tool: {name}"
     except Exception as e:

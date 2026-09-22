@@ -2,7 +2,7 @@ import os
 import json
 from pathlib import Path
 from typing import Dict, Any, List
-
+from yncli.workspace_scanner import generate_repo_map
 
 class WorkspaceMemory:
     """
@@ -13,6 +13,7 @@ class WorkspaceMemory:
         self.indexed_files: Dict[str, str] = {}
         self.file_tree: List[str] = []
         self.project_type: str = "general"
+        self.repo_map: str = ""
         self.refresh()
 
     def refresh(self) -> None:
@@ -32,6 +33,7 @@ class WorkspaceMemory:
 
         self.indexed_files = {}
         self.file_tree = []
+        self.repo_map = generate_repo_map(self.workspace_dir)
 
         try:
             for root, dirs, files in os.walk(cwd):
@@ -94,5 +96,9 @@ class WorkspaceMemory:
                 lines.append(content)
         else:
             lines.append("\n(No existing project source files found in workspace directory)")
+
+        if self.repo_map:
+            lines.append("\n### REPO STRUCTURAL MAP:")
+            lines.append(self.repo_map)
 
         return "\n".join(lines)

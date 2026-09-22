@@ -1,7 +1,46 @@
 import os
+import re
 from pathlib import Path
 from typing import Dict, Any, List
 
+def generate_repo_map(dir_path: str) -> str:
+    cwd = Path(dir_path).resolve()
+    if not cwd.exists():
+        return ""
+        
+    ignore_dirs = {"node_modules", "venv", ".venv", "__pycache__", "target", "vendor", "dist", "build", ".git"}
+    source_exts = {".py", ".js", ".ts", ".jsx", ".tsx", ".go", ".rs", ".php"}
+    
+    pattern = re.compile(r'^\s*(?:export\s+|public\s+|private\s+|protected\s+|async\s+)?(?:class|def|function|func|struct|interface)\s+[a-zA-Z0-9_]+')
+    
+    repo_map = []
+    try:
+        for root, dirs, files in os.walk(cwd):
+            dirs[:] = [d for d in dirs if d not in ignore_dirs and not d.startswith(".")]
+            
+            for f in sorted(files):
+                if Path(f).suffix.lower() in source_exts:
+                    full_path = Path(root) / f
+                    rel_path = full_path.relative_to(cwd).as_posix()
+                    
+                    try:
+                        with open(full_path, "r", encoding="utf-8") as fp:
+                            lines = fp.readlines()
+                            
+                        matched_lines = []
+                        for i, line in enumerate(lines):
+                            if pattern.search(line):
+                                matched_lines.append(f"  {i+1}: {line.strip()}")
+                                
+                        if matched_lines:
+                            repo_map.append(f"\n{rel_path}:")
+                            repo_map.extend(matched_lines)
+                    except Exception:
+                        pass
+    except Exception:
+        pass
+        
+    return "\n".join(repo_map)
 
 def scan_workspace_deep(workspace_dir: str = ".") -> Dict[str, Any]:
     """

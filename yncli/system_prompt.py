@@ -13,6 +13,18 @@ def build_system_prompt(workspace_dir: str = ".", skills_mgr: SkillsManager = No
     lang_info = detect_workspace_languages(workspace_dir)
     skill_prompt = skills_mgr.get_active_skill_prompt() if skills_mgr else ""
     
+    global_instruction = ""
+    for g_file in ["GEMINI.md", "SYSTEM.md"]:
+        p = Path(workspace_dir) / g_file
+        if p.exists():
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    global_instruction = f"\n## GLOBAL INSTRUCTIONS ({g_file})\n{f.read().strip()}\n"
+                break
+            except Exception:
+                pass
+
+    
     if memory is None:
         memory = WorkspaceMemory(workspace_dir)
     workspace_context = memory.get_context_for_prompt()
@@ -99,5 +111,6 @@ def build_system_prompt(workspace_dir: str = ".", skills_mgr: SkillsManager = No
    - Write clean, modular, production-ready code.
    - Adhere strictly to the idioms of the target language.
 {skill_prompt}
+{global_instruction}
 """
     return prompt.strip()

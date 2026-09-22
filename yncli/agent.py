@@ -87,6 +87,7 @@ class Agent:
         """
         # Always refresh workspace memory on each turn to capture file updates
         self.workspace_memory.refresh()
+        self.skills_mgr.detect_and_set_skill(user_prompt)
 
         self.history.append({"role": "user", "content": user_prompt})
 
@@ -221,17 +222,43 @@ class Agent:
                         if on_status_update:
                             on_status_update(f"Menjalankan: {fn_name}...")
 
-                        tool_res = execute_tool(fn_name, parsed_args, current_cwd=self.workspace_dir)
-
-                        if fn_name == "change_directory" and isinstance(tool_res, dict):
-                            if tool_res.get("success"):
-                                self.set_workspace_dir(tool_res["new_cwd"])
-                            tool_output_str = tool_res["message"]
-                        elif fn_name == "save_plan_document":
-                            plan_doc_saved = True
-                            tool_output_str = str(tool_res)
+                        if fn_name == "delegate_to_subagent":
+                            sub_agent = Agent(
+                                client=self.client,
+                                model=self.model,
+                                workspace_dir=self.workspace_dir,
+                                mode="build",
+                                max_tool_iterations=15,
+                                auto_approve=True,
+                                show_thinking=self.show_thinking
+                            )
+                            role = parsed_args.get("role", "Subagent")
+                            task = parsed_args.get("task_description", "")
+                            sub_prompt = f"Role: {role}\nTask: {task}"
+                            try:
+                                sub_res = sub_agent.run_turn(
+                                    user_prompt=sub_prompt,
+                                    on_thinking=on_thinking,
+                                    on_content=on_content,
+                                    on_tool_start=on_tool_start,
+                                    on_tool_end=on_tool_end,
+                                    on_status_update=on_status_update
+                                )
+                                tool_output_str = f"Subagent completed successfully:\n{sub_res['content']}"
+                            except Exception as e:
+                                tool_output_str = f"Subagent failed: {e}"
                         else:
-                            tool_output_str = str(tool_res)
+                            tool_res = execute_tool(fn_name, parsed_args, current_cwd=self.workspace_dir)
+    
+                            if fn_name == "change_directory" and isinstance(tool_res, dict):
+                                if tool_res.get("success"):
+                                    self.set_workspace_dir(tool_res["new_cwd"])
+                                tool_output_str = tool_res["message"]
+                            elif fn_name == "save_plan_document":
+                                plan_doc_saved = True
+                                tool_output_str = str(tool_res)
+                            else:
+                                tool_output_str = str(tool_res)
 
                         if fn_name in ("write_file", "edit_file_replace") and "Successfully" in tool_output_str:
                             fpath = parsed_args.get("file_path", "")

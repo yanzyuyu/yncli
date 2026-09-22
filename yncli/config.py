@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 DEFAULT_BASE_URL = "https://eyay.afdaan.web.id/v1"
-DEFAULT_API_KEY = "sk-8e3b65f406c3bd98-a0ejmb-62ab1e83"
+DEFAULT_API_KEY = ""
 DEFAULT_MODEL = "ag/gemini-3.7-flash-high"
 DEFAULT_MODE = "build"  # Modes: 'plan', 'build', 'ask'
 
@@ -25,6 +25,11 @@ def load_config() -> dict:
         "theme": "minimal-dark",
     }
 
+    if not CONFIG_FILE.exists():
+        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(config, f, indent=2)
+
     if CONFIG_FILE.exists():
         try:
             with open(CONFIG_FILE, "r", encoding="utf-8") as f:
@@ -42,3 +47,4 @@ def save_config(updates: dict) -> None:
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2)
+

@@ -6,7 +6,7 @@ long_description = (this_directory / "README.md").read_text(encoding="utf-8") if
 
 setup(
     name="yncli",
-    version="1.2.3",
+    version="1.2.4",
     description="Autonomous Polyglot AI Coding Agent & TUI",
     long_description=long_description,
     long_description_content_type="text/markdown",

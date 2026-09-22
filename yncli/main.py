@@ -89,7 +89,26 @@ def main():
 
     config = load_config()
 
+    import requests
+    local_ports = [11434, 1234, 4000]
+    local_router = None
+    for port in local_ports:
+        try:
+            resp = requests.get(f"http://127.0.0.1:{port}/v1/models", timeout=1)
+            if resp.status_code == 200:
+                local_router = f"http://127.0.0.1:{port}/v1"
+                break
+        except Exception:
+            pass
+
     base_url = config.get("base_url")
+    if local_router and base_url != local_router:
+        ans = input(f"Terdeteksi local router di {local_router}. Gunakan ini? (y/n): ")
+        if ans.lower() == 'y':
+            base_url = local_router
+            config["base_url"] = base_url
+            save_config({"base_url": base_url})
+
     api_key = config.get("api_key")
     model = args.model or config.get("model")
     mode = args.mode or config.get("mode", "build")

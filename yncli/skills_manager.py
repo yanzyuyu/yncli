@@ -59,3 +59,19 @@ class SkillsManager:
         if content:
             return f"\n\n--- ACTIVE SKILL MODE: [{self.active_skill.upper()}] ---\n{content}\n"
         return ""
+
+    def detect_and_set_skill(self, user_prompt: str) -> None:
+        skill_keywords = {
+            "security_auditor": ["security", "hack", "vulnerability", "audit"],
+            "debug_oracle": ["bug", "error", "trace", "crash", "fix", "fail", "exception"],
+            "refactor_master": ["refactor", "clean", "optimize", "rewrite"],
+            "system_architect": ["system", "architecture", "scale", "infrastructure"],
+            "polyglot": ["translate", "language", "stack", "port"],
+        }
+        prompt_lower = user_prompt.lower()
+        for skill, kws in skill_keywords.items():
+            if any(kw in prompt_lower for kw in kws):
+                if self.set_active_skill(skill):
+                    return
+        self.set_active_skill("ultrabrain")
+
