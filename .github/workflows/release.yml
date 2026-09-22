@@ -1,0 +1,69 @@
+name: Release to PyPI and NPM
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Build wheel
+        run: |
+          pip install build
+          python -m build
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          pip install twine
+          twine upload dist/*
+
+  build-binaries:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux
+          - os: windows-latest
+            target: win.exe
+          - os: macos-latest
+            target: macos
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pyinstaller -r requirements.txt
+      - run: pyinstaller --onefile --name yncli-${{ matrix.target }} yncli/main.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: yncli-${{ matrix.target }}
+          path: dist/yncli-${{ matrix.target }}
+
+  publish-npm:
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+      - uses: actions/download-artifact@v4
+        with:
+          path: binaries
+      - run: |
+          echo 'Deploying to NPM using prebuilt PyInstaller binaries...'
+          # You would write a small install.js here to fetch from GitHub releases instead, or package them in the NPM tarball.
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+

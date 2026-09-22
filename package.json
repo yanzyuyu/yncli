@@ -1,6 +1,6 @@
 {
   "name": "@yanzyuyu/yncli",
-  "version": "1.2.4",
+  "version": "1.4.0",
   "description": "Autonomous Polyglot AI Coding Agent & TUI with Ultrabrain Planning",
   "bin": {
     "yncli": "bin/yncli.js"
@@ -32,3 +32,5 @@
     "node": ">=16.0.0"
   }
 }
+
+

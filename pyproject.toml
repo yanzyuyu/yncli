@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "yncli"
-version = "1.2.4"
+version = "1.4.0"
 description = "Autonomous Polyglot AI Coding Agent & TUI"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -18,3 +18,5 @@ dependencies = [
 
 [project.scripts]
 yncli = "yncli.main:main"
+
+
